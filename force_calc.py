@@ -20,6 +20,7 @@ WHEEL_BASE = 1.3  # p
 BIKECOG = np.array([0.65, 0, 0.895 / 2])  # x, y, z
 # Rider COG is just placed randomly, should be changed based on erg study
 RIDERCOG = np.array([0.50, 0, 1.0])  # x, y, z
+COG = (BIKE_MASS * BIKECOG + RIDER_MASS * RIDERCOG) / (BIKE_MASS + RIDER_MASS)
 FWHEELRAD = 0.578 / 2  # front wheel radius
 RWHEELRAD = 0.601 / 2  # rear wheel radius
 COF = 1.5  # coefficient of friction
@@ -46,42 +47,37 @@ FAERO = 0.5 * AIR_DENS * COLA * VEL_FORWARD**2  # aerodynamic force
 THRUST_LEVEL_SS = FDRAG
 
 
-def cog_calc():
-    cog = (BIKE_MASS * BIKECOG + RIDER_MASS * RIDERCOG) / (BIKE_MASS + RIDER_MASS)
-    return cog
-
-
-def level_free_stand(cog):
-    fnorm = BIKE_MASS * GRAVITY * (WHEEL_BASE - cog[0]) / WHEEL_BASE
-    rnorm = BIKE_MASS * GRAVITY * cog[0] / WHEEL_BASE
+def level_free_stand():
+    fnorm = BIKE_MASS * GRAVITY * (WHEEL_BASE - COG[0]) / WHEEL_BASE
+    rnorm = BIKE_MASS * GRAVITY * COG[0] / WHEEL_BASE
     return fnorm, rnorm
 
 
-def ss_rectilinear(cog):
-    fnorm = BIKE_MASS * GRAVITY * cog[0] / WHEEL_BASE - THRUST_LEVEL_SS * (
-        cog[2] / WHEEL_BASE
+def ss_rectilinear():
+    fnorm = BIKE_MASS * GRAVITY * COG[0] / WHEEL_BASE - THRUST_LEVEL_SS * (
+        COG[2] / WHEEL_BASE
     )
 
     rnorm = BIKE_MASS * GRAVITY * (
-        WHEEL_BASE - cog[0]
-    ) / WHEEL_BASE + THRUST_LEVEL_SS * (cog[2] / WHEEL_BASE)
+        WHEEL_BASE - COG[0]
+    ) / WHEEL_BASE + THRUST_LEVEL_SS * (COG[2] / WHEEL_BASE)
     vmax = np.sqrt(
         (BIKE_MASS * GRAVITY)
         / (
-            0.5 * AIR_DENS * CODA * (cog[2] / WHEEL_BASE)
-            + 0.5 * AIR_DENS * COLA * (cog[0] / WHEEL_BASE)
+            0.5 * AIR_DENS * CODA * (COG[2] / WHEEL_BASE)
+            + 0.5 * AIR_DENS * COLA * (COG[0] / WHEEL_BASE)
         )
-        * (cog[0] / WHEEL_BASE)
+        * (COG[0] / WHEEL_BASE)
     )
     return fnorm, rnorm, vmax
 
 
-def trans_rectilinear(cog):
+def trans_rectilinear():
     amax_englim = (PMAX / VEL_FORWARD - FDRAG) / BIKE_MASS
-    amax_traclim = (COF * GRAVITY * (WHEEL_BASE - cog[0]) / WHEEL_BASE) / (
-        1 - COF * cog[2] / WHEEL_BASE
+    amax_traclim = (COF * GRAVITY * (WHEEL_BASE - COG[0]) / WHEEL_BASE) / (
+        1 - COF * COG[2] / WHEEL_BASE
     ) - FDRAG / BIKE_MASS
-    amax_wheelielim = GRAVITY * (cog[0] / cog[2]) - FDRAG / BIKE_MASS
+    amax_wheelielim = GRAVITY * (COG[0] / COG[2]) - FDRAG / BIKE_MASS
     return amax_englim, amax_traclim, amax_wheelielim
     """trans_rectilinear_amax = min(amax_englim, amax_traclim, amax_wheelielim)
     if trans_rectilinear_amax == amax_englim:
@@ -92,23 +88,22 @@ def trans_rectilinear(cog):
         return amax_wheelielim, "Wheelie limited"""
 
 
-def ss_cornering(cog):
-    fnorm = BIKE_MASS * GRAVITY * WHEEL_BASE / cog[0] - FAERO * (
-        cog[2] / WHEEL_BASE
+def ss_cornering():
+    fnorm = BIKE_MASS * GRAVITY * WHEEL_BASE / COG[0] - FAERO * (
+        COG[2] / WHEEL_BASE
     ) * np.cos(ROLL_ANG)
-    rnorm = BIKE_MASS * GRAVITY * (WHEEL_BASE - cog[0]) / cog[0] + FAERO * (
-        cog[2] / WHEEL_BASE
+    rnorm = BIKE_MASS * GRAVITY * (WHEEL_BASE - COG[0]) / COG[0] + FAERO * (
+        COG[2] / WHEEL_BASE
     ) * np.cos(ROLL_ANG)
     flateral = fnorm / (GRAVITY * np.cos(KINSTEER_ANG)) * (VEL_FORWARD**2 / RCURVEREAR)
     rlateral = rnorm / GRAVITY * (VEL_FORWARD**2 / RCURVEREAR)
     return fnorm, rnorm, flateral, rlateral
 
 
-COG = cog_calc()
-lfsfnorm, lfsrnorm = level_free_stand(COG)
-ssrfnorm, ssrrnorm, ssvmax = ss_rectilinear(COG)
-tra_englim, tra_traclim, tra_wheelielim = trans_rectilinear(COG)
-ssafnorm, ssarnorm, ssaflateral, ssarlateral = ss_cornering(COG)
+lfsfnorm, lfsrnorm = level_free_stand()
+ssrfnorm, ssrrnorm, ssvmax = ss_rectilinear()
+tra_englim, tra_traclim, tra_wheelielim = trans_rectilinear()
+ssafnorm, ssarnorm, ssaflateral, ssarlateral = ss_cornering()
 print(
     f"Level Free Stand: Front Normal Force = {lfsfnorm}, Rear Normal Force = {lfsrnorm}"
 )
