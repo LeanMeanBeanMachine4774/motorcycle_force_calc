@@ -38,7 +38,7 @@ KINSTEER_ANG = (
 COLA = 0.09  # coefficient of lift*area (middle of range from cossalter)
 CODA = 0.7  # coefficient of drag*area (big over estimate)
 VEL_FORWARD = 20  # forward velocity
-PMAX = 123  # max motor power
+PMAX = 36 * 10**3  # max motor power
 RCURVEREAR = WHEEL_BASE / np.tan(KINSTEER_ANG)  # Radius of curvature of rear wheel
 
 FDRAG = 0.5 * AIR_DENS * CODA * VEL_FORWARD**2  # drag force
