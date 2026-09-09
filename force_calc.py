@@ -104,20 +104,15 @@ lfsfnorm, lfsrnorm = level_free_stand()
 ssrfnorm, ssrrnorm, ssvmax = ss_rectilinear()
 tra_englim, tra_traclim, tra_wheelielim = trans_rectilinear()
 ssafnorm, ssarnorm, ssaflateral, ssarlateral = ss_cornering()
-with open("force_calc_results.txt", "w") as f:
-    print(
-        f"Level Free Stand:\n Front Normal Force = \n{lfsfnorm}\n Rear Normal Force = \n{lfsrnorm}",
-        file=f,
-    )
-    print(
-        f"Steady-State Rectilinear:\n Front Normal Force = \n{ssrfnorm}\n Rear Normal Force = \n{ssrrnorm}\n Maximum Velocity = \n{ssvmax}",
-        file=f,
-    )
-    print(
-        f"Transient Rectilinear:\n Maximum Engine Limited Acceleration =\n {tra_englim}\n Traction Limited Acceleration =\n {tra_traclim}\n Wheelie Limited Acceleration =\n {tra_wheelielim}",
-        file=f,
-    )
-    print(
-        f"Steady-State Cornering:\n Front Normal Force =\n {ssafnorm}\n Rear Normal Force =\n {ssarnorm}\n Front Lateral Force =\n {ssaflateral}\n Rear Lateral Force =\n {ssarlateral}",
-        file=f,
-    )
+print(
+    f"Level Free Stand: Front Normal Force = {lfsfnorm}, Rear Normal Force = {lfsrnorm}"
+)
+print(
+    f"Steady-State Rectilinear: Front Normal Force = {ssrfnorm}, Rear Normal Force = {ssrrnorm}, Maximum Velocity = {ssvmax}"
+)
+print(
+    f"Transient Rectilinear: Maximum Engine Limited Acceleration = {tra_englim}, Traction Limited Acceleration = {tra_traclim}, Wheelie Limited Acceleration = {tra_wheelielim}"
+)
+print(
+    f"Steady-State Acceleration: Front Normal Force = {ssafnorm}, Rear Normal Force = {ssarnorm}, Front Lateral Force = {ssaflateral}, Rear Lateral Force = {ssarlateral}"
+)
