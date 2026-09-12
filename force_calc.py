@@ -36,9 +36,13 @@ COLA = 0.09  # coefficient of lift*area (middle of range from cossalter)
 CODA = 0.5  # coefficient of drag*area (big over estimate)
 PMAX = 36 * 10**3  # max motor power
 "rider inputs / variables"
-ROLL_ANG = np.linspace(-math.pi / 3, math.pi / 3, NUMTESTS)  # roll angle (rad)
-STEER_ANG = np.linspace(-math.radians(5), math.radians(5), NUMTESTS)  # steering angle
-VEL_FORWARD = 20  # forward velocity
+STEER_ANG = math.radians(1)  # steering angle
+VEL_FORWARD = 30  # forward velocity
+RCURVEREAR = 68.0
+"""WHEEL_BASE / np.tan(KINSTEER_ANG)"""
+ROLL_ANG = math.atan(VEL_FORWARD**2 / (GRAVITY * RCURVEREAR))
+"""np.linspace(0, math.pi / 3, NUMTESTS)  # roll angle (rad)"""
+
 beta_dash = CASTER_ANG + np.arctan(
     (np.sin(STEER_ANG) * np.tan(ROLL_ANG) - math.sin(CASTER_ANG) * np.cos(STEER_ANG))
     / math.cos(CASTER_ANG)
@@ -71,13 +75,14 @@ mu = (
     + FWHEEL_THICKNESS
     - RWHEEL_THICKNESS
 ) / ((c4 + c5) * np.cos(ROLL_ANG))  # driving traction coefficient
-KINSTEER_ANG = np.arctan(
+KINSTEER_ANG = 0.01911531850199284
+"""np.arctan(
     (np.sin(STEER_ANG) * np.cos(CASTER_ANG + mu))
     / (
         np.cos(ROLL_ANG) * (np.cos(STEER_ANG))
         - np.sin(ROLL_ANG) * np.sin(STEER_ANG) * np.sin(CASTER_ANG + mu)
     )
-)  # kinematic steering angle
+)"""  # kinematic steering angle
 x_Pf = (c1 + c2) * np.sin(mu) + (c4 + c5) * np.cos(mu)
 y_Pf = (
     (-(c1 + c2) * np.cos(mu) + (c4 + c5) * np.sin(mu)) * np.sin(ROLL_ANG)
@@ -89,7 +94,6 @@ C = np.tan(STEER_ANG) / (x_Pf + y_Pf * np.tan(STEER_ANG))  # path curvature
 FDRAG = 0.5 * AIR_DENS * CODA * VEL_FORWARD**2  # drag force
 FAERO = 0.5 * AIR_DENS * COLA * VEL_FORWARD**2  # aerodynamic force
 THRUST_LEVEL_SS = FDRAG
-RCURVEREAR = WHEEL_BASE / np.tan(KINSTEER_ANG)
 
 
 def level_free_stand():
@@ -135,22 +139,27 @@ def trans_rectilinear():
 
 
 def ss_cornering():
-    fnorm = TOTAL_MASS * GRAVITY * WHEEL_BASE / COG[0] - FAERO * (
+    fnorm = TOTAL_MASS * GRAVITY * COG[0] / WHEEL_BASE - FAERO * (
         COG[2] / WHEEL_BASE
     ) * np.cos(ROLL_ANG)
-    rnorm = TOTAL_MASS * GRAVITY * (WHEEL_BASE - COG[0]) / COG[0] + FAERO * (
+    rnorm = TOTAL_MASS * GRAVITY * (WHEEL_BASE - COG[0]) / WHEEL_BASE + FAERO * (
         COG[2] / WHEEL_BASE
     ) * np.cos(ROLL_ANG)
     flateral = fnorm / (GRAVITY * np.cos(KINSTEER_ANG)) * (VEL_FORWARD**2 / RCURVEREAR)
     rlateral = rnorm / GRAVITY * (VEL_FORWARD**2 / RCURVEREAR)
-    return fnorm, rnorm, flateral, rlateral
+    freq_cof = flateral / fnorm
+    rreq_cof = rlateral / rnorm
+    return fnorm, rnorm, flateral, rlateral, freq_cof, rreq_cof
 
 
 lfsfnorm, lfsrnorm = level_free_stand()
 ssrfnorm, ssrrnorm, ssvmax = ss_rectilinear()
 tra_englim, tra_traclim, tra_wheelielim = trans_rectilinear()
-ssafnorm, ssarnorm, ssaflateral, ssarlateral = ss_cornering()
+ssafnorm, ssarnorm, ssaflateral, ssarlateral, freq_cof, rreq_cof = ss_cornering()
 with open("force_calc_results.txt", "w") as f:
+    print(KINSTEER_ANG, file=f)
+    print(mu, file=f)
+    print(ROLL_ANG, file=f)
     print(
         f"Level Free Stand:\n Front Normal Force = \n{lfsfnorm}\n Rear Normal Force = \n{lfsrnorm}",
         file=f,
@@ -164,6 +173,6 @@ with open("force_calc_results.txt", "w") as f:
         file=f,
     )
     print(
-        f"Steady-State Cornering:\n Front Normal Force =\n {ssafnorm}\n Rear Normal Force =\n {ssarnorm}\n Front Lateral Force =\n {ssaflateral}\n Rear Lateral Force =\n {ssarlateral}",
+        f"Steady-State Cornering:\n Front Normal Force =\n {ssafnorm}\n Rear Normal Force =\n {ssarnorm}\n Front Lateral Force =\n {ssaflateral}\n Rear Lateral Force =\n {ssarlateral}\n Front Coefficient of Friction =\n {freq_cof}\n Rear Coefficient of Friction =\n {rreq_cof}",
         file=f,
     )
