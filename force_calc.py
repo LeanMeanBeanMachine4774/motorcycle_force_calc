@@ -37,8 +37,8 @@ CODA = 0.5  # coefficient of drag*area (big over estimate)
 PMAX = 36 * 10**3  # max motor power
 "rider inputs / variables"
 ROLL_ANG = np.linspace(-math.pi / 3, math.pi / 3, NUMTESTS)  # roll angle (rad)
-STEER_ANG = np.linspace(-math.pi / 6, math.pi / 6, NUMTESTS)  # steering angle
-VEL_FORWARD = 50  # forward velocity
+STEER_ANG = np.linspace(-math.radians(5), math.radians(5), NUMTESTS)  # steering angle
+VEL_FORWARD = 20  # forward velocity
 beta_dash = CASTER_ANG + np.arctan(
     (np.sin(STEER_ANG) * np.tan(ROLL_ANG) - math.sin(CASTER_ANG) * np.cos(STEER_ANG))
     / math.cos(CASTER_ANG)
